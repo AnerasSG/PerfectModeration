@@ -7,6 +7,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+
 import org.mc.perfectmoderation.PerfectModeration;
 import org.mc.perfectmoderation.configs.Names;
 
@@ -24,7 +25,10 @@ public class Events implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
         Player player = e.getPlayer();
-        plugin.data.createPlayer(String.valueOf(player.getAddress().getAddress().getHostAddress()), player.getName(), player.getUniqueId());
+        plugin.data.createPlayer(String.valueOf(player.getAddress().getAddress().getHostAddress()), player.getName(), player.getUniqueId(), null);
+        if(!plugin.data.isVanished(player.getUniqueId())){
+            plugin.data.updateServerName(player.getUniqueId(), Names.get().getString("ServerName"));
+        }
     }
 
     @EventHandler
@@ -80,6 +84,8 @@ public class Events implements Listener {
             }
         }
     }
+
+
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
@@ -127,4 +133,5 @@ public class Events implements Listener {
 
         return sb.toString();
     }
+
 }

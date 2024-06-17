@@ -1,10 +1,8 @@
 package org.mc.perfectmoderation.commands;
 
-import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.config.ServerInfo;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -14,6 +12,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -23,10 +23,9 @@ import org.mc.perfectmoderation.configs.Names;
 import org.mc.perfectmoderation.custom.Punishment;
 import org.mc.perfectmoderation.custom.Report;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.io.*;
+import java.util.*;
 
 public class ReportsCommand implements CommandExecutor, Listener {
     PerfectModeration plugin;
@@ -52,12 +51,12 @@ public class ReportsCommand implements CommandExecutor, Listener {
                     playerInventories.remove(player);
                 }
                 if(plugin.data.getReportsFromDatabase().isEmpty()){
-                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.No-Reports")));
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.No-Reports"))));
                 }else{
                     openReportsInventory(player, plugin.data.getReportsFromDatabase().size());
                 }
             }else{
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Do-not-have-permission")));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Do-not-have-permission"))));
             }
             return true;
         }
@@ -68,7 +67,7 @@ public class ReportsCommand implements CommandExecutor, Listener {
         int totalPages = (int) Math.ceil((double) totalReports / reportsPerPage);
 
         for (int page = 1; page <= totalPages; page++) {
-            Inventory inventory = createReportInventory(player, page, totalReports);
+            Inventory inventory = createReportInventory(page, totalReports);
             inventories.add(inventory);
         }
         if(!inventories.isEmpty()) {
@@ -78,7 +77,7 @@ public class ReportsCommand implements CommandExecutor, Listener {
         }
 
     }
-    private Inventory createReportInventory(Player player, int page, int totalReports) {
+    private Inventory createReportInventory(int page, int totalReports) {
         Inventory inventory = Bukkit.createInventory(null, 54, ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory.Title") + " " + page));
         int startIndex = (page - 1) * reportsPerPage;
         int endIndex = Math.min(page * reportsPerPage, totalReports);
@@ -110,18 +109,18 @@ public class ReportsCommand implements CommandExecutor, Listener {
         Player player = (Player) event.getWhoClicked();
         Inventory clickedInventory = event.getClickedInventory();
 
-        if (clickedInventory != null && event.getView().getTitle().startsWith(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory.Title")))) {
+        if (clickedInventory != null && event.getView().getTitle().startsWith(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory.Title"))))) {
             event.setCancelled(true);
 
             ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem != null && clickedItem.getItemMeta() != null) {
                 String itemName = clickedItem.getItemMeta().getDisplayName();
-                if (itemName != null && itemName.equals(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory.Next-page")))) {
+                if (itemName != null && itemName.equals(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory.Next-page"))))) {
 
                     int currentPage = playerPages.get(player) + 1;
                     playerPages.put(player, currentPage);
                     player.openInventory(inventories.get(currentPage));
-                } else if (itemName != null && itemName.equals(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory.Previous-page")))) {
+                } else if (itemName != null && itemName.equals(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory.Previous-page"))))) {
                     int currentPage = playerPages.get(player) - 1;
                     playerPages.put(player, currentPage);
                     player.openInventory(inventories.get(currentPage));
@@ -132,6 +131,7 @@ public class ReportsCommand implements CommandExecutor, Listener {
                     player.openInventory(playerInventoriesForAll.get(player));
                     playerInventoriesForAll.remove(player);
                     } catch (NumberFormatException e) {
+                        e.printStackTrace();
                     }
                 } else if (event.getClick() == ClickType.LEFT && itemName != null) {
                     try {
@@ -140,72 +140,63 @@ public class ReportsCommand implements CommandExecutor, Listener {
                         player.openInventory(playerInventoriesForAll.get(player));
                         playerInventoriesForAll.remove(player);
                     } catch (NumberFormatException e) {
+                        e.printStackTrace();
                     }
                 }
             }
 
-        }else if(clickedInventory!= null && event.getView().getTitle().startsWith(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory-for-checking-reports.Name")))){
+        }else if(clickedInventory!= null && event.getView().getTitle().startsWith(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory-for-checking-reports.Name"))))){
             event.setCancelled(true);
             ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem != null && clickedItem.getItemMeta() != null) {
                 String itemName = clickedItem.getItemMeta().getDisplayName();
-                if (itemName != null && itemName.equals(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory-for-checking-reports.Back.Name")))) {
+                if (itemName != null && itemName.equals(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory-for-checking-reports.Back.Name"))))) {
                     int currentPage = playerPages.get(player);
                     playerPages.put(player, currentPage);
                     player.openInventory(inventories.get(currentPage));
-                } else if (itemName != null && itemName.equals(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory-for-checking-reports.Checked.Name")))) {
+                } else if (itemName != null && itemName.equals(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory-for-checking-reports.Checked.Name"))))) {
                     ItemStack item = clickedInventory.getItem(13);
-                    int ID = Integer.valueOf(item.getItemMeta().getDisplayName());
+                    int ID = Integer.valueOf(Objects.requireNonNull(item).getItemMeta().getDisplayName());
                     Report report = plugin.data.getReportByID(ID);
-                    ProxiedPlayer targetPlayer = ProxyServer.getInstance().getPlayer(report.getTarget());
-                    if (targetPlayer == null) {
-                        player.sendMessage("Player is not online!");
-                        return;
-                    }
-                    if(arePlayersOnSameServer(player, targetPlayer)){
-
-                    }
-                    plugin.data.deleteReportById(Integer.valueOf(ID));
+                    plugin.data.setVanished(player.getUniqueId(), true);
+                    teleportPlayer(player, plugin.data.getServerNameByPlayerName(report.getTarget()));
                     player.closeInventory();
-                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory-for-checking-reports.Successfully-checked-report")));
+                    plugin.data.deleteReportById(ID);
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory-for-checking-reports.Successfully-checked-report"))));
                 }
             }
-        } else if (clickedInventory!=null && event.getView().getTitle().startsWith(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory-for-Info.Name")))) {
+        } else if (clickedInventory!=null && event.getView().getTitle().startsWith(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory-for-Info.Name"))))) {
             event.setCancelled(true);
             ItemStack clickedItem = event.getCurrentItem();
             if(clickedItem != null && clickedItem.getItemMeta() != null){
                 String itemName = clickedItem.getItemMeta().getDisplayName();
-                if (itemName != null && itemName.equals(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory-for-Info.Back.Name")))) {
+                if (itemName != null && itemName.equals(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory-for-Info.Back.Name"))))) {
                     int currentPage = playerPages.get(player);
                     playerPages.put(player, currentPage);
                     player.openInventory(inventories.get(currentPage));
                 }
             }
+        } else if (clickedInventory != null && clickedInventory.equals(player.getInventory())){
+            if(plugin.data.isVanished(player.getUniqueId())){
+                event.setCancelled(true);
+            }
         }
+
     }
-    public void teleportPlayerToServer(Player player, ServerInfo server) {
-        ProxiedPlayer proxiedPlayer = (ProxiedPlayer) player;
-
-        // Получаем экземпляр ProxyServer
-        ProxyServer proxyServer = ProxyServer.getInstance();
-
-        // Телепортируем игрока на другой сервер
-        proxiedPlayer.connect(server);
-    }
-    public void teleportPlayer(Player player1, ProxiedPlayer player2) {
-        player1.teleport(player2.);
-    }
-    public boolean arePlayersOnSameServer(Player player1, Player player2) {
-        ProxiedPlayer proxiedPlayer1 = (ProxiedPlayer) player1;
-        ProxiedPlayer proxiedPlayer2 = (ProxiedPlayer) player2;
-
-        ServerInfo server1 = proxiedPlayer1.getServer().getInfo();
-        ServerInfo server2 = proxiedPlayer2.getServer().getInfo();
-
-        return server1.equals(server2);
+    public void teleportPlayer(Player player, String serverName) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
+        try {
+            dataOutputStream.writeUTF("Connect");
+            dataOutputStream.writeUTF(serverName);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        player.sendPluginMessage(plugin, "BungeeCord", byteArrayOutputStream.toByteArray());
     }
     private Inventory createInventoryForReport(int ID) {
-        Inventory inventory = Bukkit.createInventory(null, 54, ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory-for-checking-reports.Name")));
+        Inventory inventory = Bukkit.createInventory(null, 54, ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory-for-checking-reports.Name"))));
         Report report = plugin.data.getReportByID(ID);
         setPanels(inventory);
         ItemStack list = new ItemStack(Material.PAPER);
@@ -214,6 +205,7 @@ public class ReportsCommand implements CommandExecutor, Listener {
         lore.add(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory.Lore.Sender") + report.getReporter()));
         lore.add(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory.Lore.Target") + report.getTarget()));
         lore.add(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory.Lore.Description") + report.getDescription()));
+        lore.add(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory.Lore.ServerName") + report.getServerName()));
         lore.add(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory.Lore.Date") + report.getDateOfIssue()));
         lore.add(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory.Lore.Ip") + report.getIp()));
         meta.setLore(lore);
@@ -224,18 +216,18 @@ public class ReportsCommand implements CommandExecutor, Listener {
         ItemStack redDye = new ItemStack(Material.RED_DYE);
         ItemMeta redDyeMeta = redDye.getItemMeta();
         List<String> redDyeLore = new ArrayList<>();
-        redDyeLore.add(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory-for-checking-reports.Back.Lore")));
+        redDyeLore.add(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory-for-checking-reports.Back.Lore"))));
         redDyeMeta.setLore(redDyeLore);
-        redDyeMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory-for-checking-reports.Back.Name")));
+        redDyeMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory-for-checking-reports.Back.Name"))));
         redDye.setItemMeta(redDyeMeta);
         inventory.setItem(30, redDye);
 
         ItemStack greenDye = new ItemStack(Material.LIME_DYE);
         ItemMeta greenDyeMeta = redDye.getItemMeta();
         List<String> greenDyeLore = new ArrayList<>();
-        greenDyeLore.add(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory-for-checking-reports.Checked.Lore")));
+        greenDyeLore.add(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory-for-checking-reports.Checked.Lore"))));
         greenDyeMeta.setLore(greenDyeLore);
-        greenDyeMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory-for-checking-reports.Checked.Name")));
+        greenDyeMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory-for-checking-reports.Checked.Name"))));
         greenDye.setItemMeta(greenDyeMeta);
 
         inventory.setItem(32, greenDye);
@@ -243,9 +235,9 @@ public class ReportsCommand implements CommandExecutor, Listener {
         return inventory;
     }
     private Inventory createInventoryForInfo(int ID){
-        Inventory inventory = Bukkit.createInventory(null, 54, ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory-for-Info.Name")));
+        Inventory inventory = Bukkit.createInventory(null, 54, ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory-for-Info.Name"))));
         Report report = plugin.data.getReportByID(ID);
-        String string = "";
+        StringBuilder string = new StringBuilder();
         setPanels(inventory);
         ItemStack item = new ItemStack(Material.PAPER);
         ItemMeta itemMeta = item.getItemMeta();
@@ -254,12 +246,12 @@ public class ReportsCommand implements CommandExecutor, Listener {
         List<String> names = plugin.data.getNamesByIP(report.getIp());
         for (int i = 0; i < names.size(); i++) {
             String name = names.get(i);
-            string += name;
+            string.append(name);
             if (i < names.size() - 1) {
-                string += ", ";
+                string.append(", ");
             }
         }
-        lore.add(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory-for-Info.Lore.Accounts")) + string);
+        lore.add(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory-for-Info.Lore.Accounts"))) + string);
         List<Punishment> punishments = plugin.data.getPunishmentsByIP(report.getIp());
         for(Punishment p : punishments){
             String pString = p.getPunishment() + ": " + p.getDateOfIssue() +  "; " + p.getEndDate();
@@ -272,9 +264,9 @@ public class ReportsCommand implements CommandExecutor, Listener {
         ItemStack redDye = new ItemStack(Material.RED_DYE);
         ItemMeta redDyeMeta = redDye.getItemMeta();
         List<String> redDyeLore = new ArrayList<>();
-        redDyeLore.add(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory-for-Info.Back.Lore")));
+        redDyeLore.add(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory-for-Info.Back.Lore"))));
         redDyeMeta.setLore(redDyeLore);
-        redDyeMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory-for-Info.Back.Name")));
+        redDyeMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory-for-Info.Back.Name"))));
         redDye.setItemMeta(redDyeMeta);
         inventory.setItem(40, redDye);
         return inventory;
@@ -282,14 +274,14 @@ public class ReportsCommand implements CommandExecutor, Listener {
     private ItemStack createNextPageItem() {
         ItemStack nextPageItem = new ItemStack(Material.ARROW);
         ItemMeta meta = nextPageItem.getItemMeta();
-        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory.Next-page")));
+        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory.Next-page"))));
         nextPageItem.setItemMeta(meta);
         return nextPageItem;
     }
     private ItemStack createPreviousPageItem(){
         ItemStack previousPageItem = new ItemStack(Material.ARROW);
         ItemMeta meta = previousPageItem.getItemMeta();
-        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', Names.get().getString("Reports.Inventory.Previous-page")));
+        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Reports.Inventory.Previous-page"))));
         previousPageItem.setItemMeta(meta);
         return previousPageItem;
     }
@@ -341,4 +333,39 @@ public class ReportsCommand implements CommandExecutor, Listener {
         }
         return item;
     }
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (event.getAction().toString().contains("RIGHT_CLICK")) {
+            ItemStack item = event.getItem();
+            if (item != null) {
+                ItemMeta meta = item.getItemMeta();
+                if (meta != null && meta.getDisplayName().equals(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Vanished.Back"))))) {
+                    teleportPlayer(event.getPlayer(), plugin.data.getServerNameByPlayerName(event.getPlayer().getName()));
+                    event.getPlayer().getInventory().clear();
+                    plugin.data.setVanished(event.getPlayer().getUniqueId(), false);
+                }
+            }
+        }
+    }
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event){
+        Player player = event.getPlayer();
+        if (plugin.data.isVanished(player.getUniqueId())) {
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                player.setGameMode(GameMode.CREATIVE);
+               for(Player p : Bukkit.getOnlinePlayers()){
+                    p.hidePlayer(player);
+                }
+                ItemStack back = new ItemStack(Material.RED_DYE);
+                ItemMeta backMeta = back.getItemMeta();
+
+                backMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("Vanished.Back"))));
+                back.setItemMeta(backMeta);
+
+                player.getInventory().setItem(4, back);
+
+            });
+        }
+    }
+
 }

@@ -8,14 +8,16 @@ public class Report {
     private String reporter;
     private String target;
     private String description;
+    private String serverName;
     private Timestamp dateOfIssue;
 
-    public Report(int id, String ip, String reporter, String target, String description, Timestamp dateOfIssue) {
+    public Report(int id, String ip, String reporter, String target, String description, String serverName, Timestamp dateOfIssue) {
         this.id = id;
         this.ip = ip;
         this.reporter = reporter;
         this.target = target;
         this.description = description;
+        this.serverName = serverName;
         this.dateOfIssue = dateOfIssue;
     }
 
@@ -36,6 +38,10 @@ public class Report {
     }
 
     public String getDescription() {
+        return description;
+    }
+
+    public String getServerName() {
         return description;
     }
 

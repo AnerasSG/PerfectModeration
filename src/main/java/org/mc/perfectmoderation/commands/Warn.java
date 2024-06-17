@@ -29,6 +29,9 @@ public class Warn implements CommandExecutor {
         Player sender = (Player) commandSender;
 
         if(command.getName().equalsIgnoreCase("warn")) {
+            if(!sender.hasPermission("PerfectModeration.Warn")){
+                return true;
+            }
             String playerName = args[0];
             Player player = Bukkit.getPlayer(playerName);
             UUID uuid;
@@ -81,10 +84,10 @@ public class Warn implements CommandExecutor {
                 plugin.data.addPunishment(plugin.data.getIPByUUID(uuid), "Ban", new Timestamp(currentTime), new Timestamp(banEndTime), sender.getName());
                 takeMessage(player, banDuration);
             }
-            String string = Names.get().getString("Warn.Done.ForOperator").replaceAll("%PFModeration_Player_Name%", playerName);
+            String string = Objects.requireNonNull(Names.get().getString("Warn.Done.ForOperator")).replaceAll("%PFModeration_Player_Name%", playerName);
             sender.sendMessage(ChatColor.translateAlternateColorCodes('&', string));
-            if(player != null & player.isOnline()){
-                String message = Names.get().getString("Warn.Done.ForPlayer").replaceAll("%PFModeration_Reason%", reason);
+            if(player != null & Objects.requireNonNull(player).isOnline()){
+                String message = Objects.requireNonNull(Names.get().getString("Warn.Done.ForPlayer")).replaceAll("%PFModeration_Reason%", reason);
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
             }
         }
@@ -156,8 +159,7 @@ public class Warn implements CommandExecutor {
 
         try {
             int value = Integer.parseInt(timeArg.substring(0, timeArg.length() - 1));
-            long duration = value * multiplier;
-            return duration;
+            return value * multiplier;
         } catch (NumberFormatException e) {
             return -1;
         }

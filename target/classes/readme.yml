@@ -1,0 +1,46 @@
+Commands:
+  /report:
+    Usage: /report <target> <description>
+    Description: When a player writes this command, a report is created, which in the future allows the server moderation to check this player. Does not require permissions
+  /reports:
+    Usage: /reports
+    Description: Opens the inventory with all available reports at the moment. Permissions - "PerfectModeration.Reports"
+  /tempban:
+    Usage: /temp-ban <username> <time> <reason>
+    Description: Allows you to issue a temporary ban to a certain player. Main permissions - "PerfectModeration.TempBan"
+      Additional permissions -  
+      "PerfectModeration.TempBan.Minute.20"
+      "PerfectModeration.TempBan.Minute.60"
+      "PerfectModeration.TempBan.Minute.360"
+      "PerfectModeration.TempBan.Minute.1440"
+      "PerfectModeration.TempBan.Week.1"
+      "PerfectModeration.TempBan.Week.2"
+      "PerfectModeration.TempBan.Month.1"
+      "PerfectModeration.TempBan.Month.6"
+      "PerfectModeration.TempBan.Month.12"
+      These permissions set the maximum allowed time for which a certain player can ban.
+  /unban:
+    Usage: /unban <username>
+    Description: Removes the ban from the player. Permissions - "PerfectModeration.UnBan"
+  /tempmute:
+    Usage: /temp-mute <username> <time> <reason>
+    Description: Allows you to issue a temporary mute to a certain player. Main permissions - "PerfectModeration.TempMute"
+      Additional permissions -  
+      "PerfectModeration.TempMute.Minute.20"
+      "PerfectModeration.TempMute.Minute.60"
+      "PerfectModeration.TempMute.Minute.360"
+      "PerfectModeration.TempMute.Minute.1440"
+      "PerfectModeration.TempMute.Week.1"
+      "PerfectModeration.TempMute.Week.2"
+      "PerfectModeration.TempMute.Month.1"
+      "PerfectModeration.TempMute.Month.6"
+      "PerfectModeration.TempMute.Month.12"
+      These permissions set the maximum allowed time for which a certain player can mute.
+  /unmute:
+    Usage: /unmute <username>
+    Description: Removes the mute from the player. Permissions - "PerfectModeration.UnMute"
+  /warn:
+    Usage: /warn <username>
+    Description: Issues a player a warning, and after a certain number of warnings, the player gets banned for a period of time (configurable). Permissions - "PerfectModeration.Warn"
+
+

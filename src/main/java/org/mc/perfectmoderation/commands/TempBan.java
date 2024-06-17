@@ -75,7 +75,7 @@ public class TempBan implements CommandExecutor, Listener {
             plugin.data.addPunishment(plugin.data.getIPByUUID(uuid), "Ban", new Timestamp(currentTime), new Timestamp(banEndTime), sender.getName());
 
 
-            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', Names.get().getString("TempBan.Done").replaceAll("%PFModeration_Player_Name%", playerName)));
+            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("TempBan.Done")).replaceAll("%PFModeration_Player_Name%", playerName)));
               if (player != null && player.isOnline()) {
                   StringBuilder kickMessage = new StringBuilder();
                   for(String string: Names.get().getStringList("TempBan.Layout")){

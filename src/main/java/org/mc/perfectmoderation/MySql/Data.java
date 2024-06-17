@@ -147,7 +147,7 @@ public class Data {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return false; // Возвращаем false, если произошла ошибка или не найдено ни одной записи для указанного UUID
+        return false;
     }
 
 
@@ -366,28 +366,83 @@ public class Data {
     public void createAccountsTable(){
         PreparedStatement preparedStatement;
         try {
-            preparedStatement = plugin.SQL.getConnection().prepareStatement("CREATE TABLE IF NOT EXISTS Accounts "
-                    + "(IP VARCHAR(100), Name VARCHAR(100), UUID VARCHAR(100))");
+            preparedStatement = plugin.SQL.getConnection().prepareStatement(
+                    "CREATE TABLE IF NOT EXISTS Accounts " +
+                            "(IP VARCHAR(100), Name VARCHAR(100), UUID VARCHAR(100), serverName VARCHAR(100), " +
+                            "vanished BOOLEAN DEFAULT FALSE)"
+            );
             preparedStatement.executeUpdate();
         } catch (SQLException e){
             e.printStackTrace();
         }
     }
-    public void createPlayer(String ip, String name, UUID uuid) {
+    public void createPlayer(String ip, String name, UUID uuid, String serverName) {
         if (playerExists(ip, name, uuid)) {
             return;
         }
 
         PreparedStatement preparedStatement = null;
         try {
-            preparedStatement = plugin.SQL.getConnection().prepareStatement("INSERT INTO Accounts (IP, Name, UUID) VALUES (?, ?, ?)");
+            preparedStatement = plugin.SQL.getConnection().prepareStatement(
+                    "INSERT INTO Accounts (IP, Name, UUID, serverName, vanished) VALUES (?, ?, ?, ?, ?)"
+            );
             preparedStatement.setString(1, ip);
             preparedStatement.setString(2, name);
             preparedStatement.setString(3, uuid.toString());
+            preparedStatement.setString(4, serverName);
+            preparedStatement.setBoolean(5, false);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+    public boolean isVanished(UUID uuid) {
+        PreparedStatement preparedStatement;
+        boolean vanished = false;
+        try {
+            preparedStatement = plugin.SQL.getConnection().prepareStatement(
+                    "SELECT vanished FROM Accounts WHERE UUID = ?"
+            );
+            preparedStatement.setString(1, uuid.toString());
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                vanished = resultSet.getBoolean("vanished");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return vanished;
+    }
+    public void setVanished(UUID uuid, boolean vanished) {
+        PreparedStatement preparedStatement;
+        try {
+            preparedStatement = plugin.SQL.getConnection().prepareStatement(
+                    "UPDATE Accounts SET vanished = ? WHERE UUID = ?"
+            );
+            preparedStatement.setBoolean(1, vanished);
+            preparedStatement.setString(2, uuid.toString());
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    public String getServerNameByPlayerName(String playerName){
+        PreparedStatement preparedStatement;
+        ResultSet resultSet;
+        String serverName = null;
+        try {
+            preparedStatement = plugin.SQL.getConnection().prepareStatement("SELECT serverName FROM Accounts WHERE Name = ?");
+            preparedStatement.setString(1, playerName);
+            resultSet = preparedStatement.executeQuery();
+            if(resultSet.next()){
+                serverName = resultSet.getString("serverName");
+            }
+            resultSet.close();
+            preparedStatement.close();
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return serverName;
     }
     public String getIPByUUID(UUID uuid) {
         String ip = null;
@@ -424,6 +479,18 @@ public class Data {
             return false;
         }
     }
+    public void updateServerName(UUID uuid, String newServerName) {
+        PreparedStatement preparedStatement = null;
+        try {
+            preparedStatement = plugin.SQL.getConnection().prepareStatement("UPDATE Accounts SET serverName = ? WHERE UUID = ?");
+            preparedStatement.setString(1, newServerName);
+            preparedStatement.setString(2, uuid.toString());
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public List<String> getNamesByIP(String ip) {
         List<String> names = new ArrayList<>();
         PreparedStatement preparedStatement = null;
@@ -447,31 +514,33 @@ public class Data {
         PreparedStatement preparedStatement;
         try {
             preparedStatement = plugin.SQL.getConnection().prepareStatement("CREATE TABLE IF NOT EXISTS Reports "
-                    + "(ID INT AUTO_INCREMENT PRIMARY KEY, IP VARCHAR(100), Reporter VARCHAR(100), Target VARCHAR(100), Description TEXT, Date_of_issue TIMESTAMP DEFAULT CURRENT_TIMESTAMP, Checked BOOLEAN DEFAULT FALSE)");
+                    + "(ID INT AUTO_INCREMENT PRIMARY KEY, IP VARCHAR(100), Reporter VARCHAR(100), Target VARCHAR(100), Description TEXT, ServerName TEXT, Date_of_issue TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
             preparedStatement.executeUpdate();
         } catch (SQLException e){
             e.printStackTrace();
         }
     }
-    public void addReport(String ip, String reporter, String target, String description, Timestamp dateOfIssue) {
+    public void addReport(String ip, String reporter, String target, String description, String serverName, Timestamp dateOfIssue) {
         try {
             int nextId = getNextAvailableId();
             if (nextId != -1) {
-                PreparedStatement ps = plugin.SQL.getConnection().prepareStatement("INSERT INTO Reports (ID, IP, Reporter, Target, Description, Date_of_issue) VALUES (?,?,?,?,?,?)");
+                PreparedStatement ps = plugin.SQL.getConnection().prepareStatement("INSERT INTO Reports (ID, IP, Reporter, Target, Description, ServerName, Date_of_issue) VALUES (?,?,?,?,?,?,?)");
                 ps.setInt(1, nextId);
                 ps.setString(2, ip);
                 ps.setString(3, reporter);
                 ps.setString(4, target);
                 ps.setString(5, description);
-                ps.setTimestamp(6, dateOfIssue);
+                ps.setString(6, serverName);
+                ps.setTimestamp(7, dateOfIssue);
                 ps.executeUpdate();
             } else {
-                PreparedStatement ps = plugin.SQL.getConnection().prepareStatement("INSERT INTO Reports (IP, Reporter, Target, Description, Date_of_issue) VALUES (?,?,?,?,?)");
+                PreparedStatement ps = plugin.SQL.getConnection().prepareStatement("INSERT INTO Reports (IP, Reporter, Target, Description, ServerName, Date_of_issue) VALUES (?,?,?,?,?,?)");
                 ps.setString(1, ip);
                 ps.setString(2, reporter);
                 ps.setString(3, target);
                 ps.setString(4, description);
-                ps.setTimestamp(5, dateOfIssue);
+                ps.setString(5, serverName);
+                ps.setTimestamp(6, dateOfIssue);
                 ps.executeUpdate();
             }
         } catch (SQLException e) {
@@ -490,6 +559,7 @@ public class Data {
                         rs.getString("Reporter"),
                         rs.getString("Target"),
                         rs.getString("Description"),
+                        rs.getString("ServerName"),
                         rs.getTimestamp("Date_of_issue")
                 );
                 reports.add(report);
@@ -511,16 +581,17 @@ public class Data {
                 String reporter = resultSet.getString("Reporter");
                 String target = resultSet.getString("Target");
                 String description = resultSet.getString("Description");
+                String serverName = resultSet.getString("ServerName");
                 Timestamp dateOfIssue = resultSet.getTimestamp("Date_of_issue");
-                boolean checked = resultSet.getBoolean("Checked");
 
-                report = new Report(ID, ip, reporter, target, description, dateOfIssue);
+                report = new Report(ID, ip, reporter, target, description, serverName, dateOfIssue);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return report;
     }
+
     public void deleteReportById(int reportId) {
         PreparedStatement preparedStatement = null;
 

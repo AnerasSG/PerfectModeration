@@ -24,6 +24,8 @@ public final class PerfectModeration extends JavaPlugin {
 
         }
 
+        this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+
         MySQLConfig.setup();
         MySQLConfig.get().addDefault("Storage", "MySQL");
         MySQLConfig.get().addDefault("host", "host");
@@ -69,6 +71,9 @@ public final class PerfectModeration extends JavaPlugin {
         banNotification.add("&cExpires in: &b%PFModeration_Duration%");
 
         Names.setup();
+        Names.get().addDefault("ServerName", "ServerName");
+        Names.get().addDefault("Vanished.Checked", "&aChecked");
+        Names.get().addDefault("Vanished.Back", "&cBack");
         Names.get().addDefault("Do-not-have-permission", "&cYou don't have a permission for that");
         Names.get().addDefault("Reports.Usage", "&cUsage: /report <target> <description>");
         Names.get().addDefault("Reports.Player-not-found", "&cI couldn't find such a player.");
@@ -80,6 +85,7 @@ public final class PerfectModeration extends JavaPlugin {
         Names.get().addDefault("Reports.Inventory.Lore.Sender", "&cSender:");
         Names.get().addDefault("Reports.Inventory.Lore.Target", "&cTarget:");
         Names.get().addDefault("Reports.Inventory.Lore.Description", "&cDescription:");
+        Names.get().addDefault("Reports.Inventory.Lore.ServerName", "&cServerName");
         Names.get().addDefault("Reports.Inventory.Lore.Date", "&cDate:");
         Names.get().addDefault("Reports.Inventory.Lore.Ip", "&cIp:");
         Names.get().addDefault("Reports.Inventory-for-checking-reports.Name", "&cInventory for checking reports");
@@ -159,13 +165,13 @@ public final class PerfectModeration extends JavaPlugin {
         Names.get().options().copyDefaults(true);
         Names.save();
         Bukkit.getPluginManager().registerEvents(new Events(this), this);
-        Bukkit.getServer().getPluginCommand("report").setExecutor(new ReportCommand(this));
-        Bukkit.getServer().getPluginCommand("reports").setExecutor(new ReportsCommand(this));
-        Bukkit.getServer().getPluginCommand("temp-mute").setExecutor(new TempMute(this));
-        Bukkit.getServer().getPluginCommand("unmute").setExecutor(new Unmute(this));
-        Bukkit.getServer().getPluginCommand("temp-ban").setExecutor(new TempBan(this));
-        Bukkit.getServer().getPluginCommand("unban").setExecutor(new UnBan(this));
-        Bukkit.getServer().getPluginCommand("warn").setExecutor(new Warn(this));
+        Objects.requireNonNull(Bukkit.getServer().getPluginCommand("report")).setExecutor(new ReportCommand(this));
+        Objects.requireNonNull(Bukkit.getServer().getPluginCommand("reports")).setExecutor(new ReportsCommand(this));
+        Objects.requireNonNull(Bukkit.getServer().getPluginCommand("temp-mute")).setExecutor(new TempMute(this));
+        Objects.requireNonNull(Bukkit.getServer().getPluginCommand("unmute")).setExecutor(new Unmute(this));
+        Objects.requireNonNull(Bukkit.getServer().getPluginCommand("temp-ban")).setExecutor(new TempBan(this));
+        Objects.requireNonNull(Bukkit.getServer().getPluginCommand("unban")).setExecutor(new UnBan(this));
+        Objects.requireNonNull(Bukkit.getServer().getPluginCommand("warn")).setExecutor(new Warn(this));
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[PerfectModeration]" + ChatColor.WHITE + " PerfectModeration was enabled");
 
 

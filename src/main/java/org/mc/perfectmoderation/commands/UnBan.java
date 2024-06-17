@@ -50,9 +50,9 @@ public class UnBan implements CommandExecutor {
             if(plugin.data.isPlayerInBanTable(uuid)){
                 plugin.data.removePlayerFromBanTable(uuid);
                 plugin.data.removeLastPunishment(plugin.data.getIPByUUID(uuid));
-                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', Names.get().getString("UnBan.Done.ForOperator").replaceAll("%PFModeration_Player_Name%", playerName)));
+                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("UnBan.Done.ForOperator")).replaceAll("%PFModeration_Player_Name%", playerName)));
             }else{
-                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', Names.get().getString("UnBan.NotBanned")));
+                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(Names.get().getString("UnBan.NotBanned"))));
             }
         }
         return false;

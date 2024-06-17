@@ -2,6 +2,7 @@ name: PerfectModeration
 version: '1.0-SNAPSHOT'
 main: org.mc.perfectmoderation.PerfectModeration
 api-version: '1.20'
+load: STARTUP
 
 commands:
   report:
@@ -17,23 +18,3 @@ commands:
   unban:
 
   warn:
-
-permissions:
-  PerfectModeration.TempMute.Minute.20:
-    default: false
-  PerfectModeration.TempMute.Minute.60:
-    default: false
-  PerfectModeration.TempMute.Minute.360:
-    default: false
-  PerfectModeration.TempMute.Minute.1440:
-    default: false
-  PerfectModeration.TempMute.Week.1:
-    default: false
-  PerfectModeration.TempMute.Week.2:
-    default: false
-  PerfectModeration.TempMute.Month.1:
-    default: false
-  PerfectModeration.TempMute.Month.6:
-    default: false
-  PerfectModeration.TempMute.Month.12:
-    default: false
